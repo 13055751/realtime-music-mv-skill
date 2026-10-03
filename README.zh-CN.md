@@ -2,7 +2,7 @@
 
 > 面向 AI Coding Agent 的**通用实时音乐 MV Skill**：根据音乐、歌词、参考图与用户意图，完成实时音乐 MV 的设计、实现、渲染、检查与迭代。
 
-**当前版本：** `2.2.0` · **状态：** 实验中 / 持续演进 · **许可证：** MIT · English: [README.md](README.md)
+**当前版本：** `2.3.0` · **状态：** 实验中 / 持续演进 · **许可证：** MIT · English: [README.md](README.md)
 
 ---
 
@@ -126,7 +126,9 @@ prototype → render → inspect → classify → repair → render again → �
 3. **只回答真正重要的问题**：Agent 会自行编译需求，只在真正的决策边界（主视觉方向、布局拓扑、歌词可读性 vs 密度、素材策略……）提问，其余一律使用文档化默认值。
 4. **一起看画面**：Agent 必须渲染代表性时间点，并报告 `implemented / validated / known limitations / next refinement`。
 
-如果宿主的 Agent 需要更强约束，`SKILL.md` 内置了一段可直接粘贴的 prompt 模板（见 *Prompt template for DeepSeek / open-ended coding agents*）。
+如果宿主的 Agent 需要更强约束，Skill 内置了一段可直接粘贴的 prompt 模板 —— 见
+[`references/workflow.md`](references/workflow.md) 中的 *Prompt template for DeepSeek /
+open-ended coding agents*。
 
 ### 为什么坚持 Audio-first
 
@@ -151,6 +153,14 @@ realtime-music-mv-skill/
 ├── README.md            ← 本文件（面向人类）
 ├── README.zh-CN.md      ← 中文版
 ├── SKILL.md             ← Skill 本体：Agent 执行入口
+├── references/          ← 详细手册，按需加载
+│   ├── architecture.md          Scene/Plate/Compositor、世界状态、运行时、预算
+│   ├── workflow.md              构建步骤、行为契约、Prompt 模板、降级策略
+│   ├── visual-system.md         风格适配器、终端/TUI 细则、转场、终局设计
+│   ├── music-visual-mapping.md  beat/onset/energy/MIDI 耦合、歌词即事件
+│   ├── reference-analysis.md    参考图检查、保真度校验、素材溯源
+│   ├── decision-protocol.md     交互式询问、决策锁定、问题质量
+│   └── validation.md            时间轴/覆盖/确定性/文本检查、批评与修复循环
 ├── LICENSE              ← MIT
 ├── CHANGELOG.md         ← 版本演化 + 已知问题
 ├── examples/
@@ -161,6 +171,11 @@ realtime-music-mv-skill/
     └── readme_ai.md     ← 项目原始文档（中文）
 ```
 
+`SKILL.md` 保持自洽：保留使命、时间不变量、请求编译器、完整示例、质量层级、谱系、
+执行强制协议（L0–L3、审计、错误分级、Completion Gate）与审计清单，并摘录每个被拆出
+章节的核心规则。SKILL 中的编号断档是有意的 —— 每个断档都指向承载该章节的 reference
+文件，且原始章节编号原样保留。
+
 ## 版本演化
 
 | 版本 | 变化 |
@@ -168,7 +183,8 @@ realtime-music-mv-skill/
 | `1.x` | 从实时音乐视觉实践中提取基础架构：audio → time → visual state → render |
 | `2.0.0` | Universal Skill 化：风格适配、Scene/Plate 系统、歌词即事件、验证、Prompt 编译 |
 | `2.1.0` | Agent 执行流程、决策边界、Input/Existing-Project Audit、确定性规则 |
-| `2.2.0` | Mission Lock；determinism、审计、Replan Trigger、Completion Gate 强化 —— **当前版本** |
+| `2.2.0` | Mission Lock；determinism、审计、Replan Trigger、Completion Gate 强化 —— 实测可用基线 |
+| `2.3.0` | 交互式问题工具 payload 的 UI 安全修复（消息/工具分离）；仓库拆分为 `SKILL.md` + `references/` —— **当前版本，尚未实测** |
 
 完整历史、来源与已知问题见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -180,7 +196,13 @@ realtime-music-mv-skill/
 
 ## 已知问题
 
-见 [CHANGELOG.md](CHANGELOG.md)：每个版本的已知问题都在其中如实声明，不藏。
+每个版本的已知问题都在 [CHANGELOG.md](CHANGELOG.md) 里如实声明，不藏：
+
+- **v2.2.0** —— 交互式问题工具的 payload 里塞进完整的
+  `[DECISION] / [WHY] / [OPTIONS] / [DEFAULT]` 时，部分宿主 UI 无法渲染选项。
+  **已在 v2.3.0 修复**（完整语境移到普通消息，工具 payload 只留短决策索引）。
+  除此之外 v2.2.0 是实测可用基线。
+- **v2.3.0** —— 含上述修复，但**尚未实测**；欢迎把真实环境中的失败反馈回来，打进下一个补丁。
 
 ## 许可证
 

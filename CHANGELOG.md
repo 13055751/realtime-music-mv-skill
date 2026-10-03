@@ -9,6 +9,64 @@ the entry is explicitly marked as *reconstructed* from project documentation
 
 ---
 
+## [2.3.0] — 2026-10-03
+
+Verified against the shipped artifact `realtime-music-mv-universal-skill-v2.3.0.zip`
+(`SKILL.md`, 54 765 bytes, 2 191 lines, frontmatter `version: 2.3.0`).
+
+### Fixed — interactive question tool payload (found in real host failures)
+
+Root cause: a long `question` field can prevent constrained host UIs from rendering the
+options at all. 2.3.0 separates the two channels:
+
+- **Full context lives in the normal agent message** — question, why it matters, options
+  with consequences, recommended default, reply format. The interactive tool carries only
+  a short header, a short decision index and concise options.
+- The tool's `question` field is an **index**, not a copy of the natural-language question.
+  Never put `[WHY IT MATTERS]`, `[RECOMMENDED DEFAULT]`, `[REPLY]`, long rationale,
+  reference analysis or implementation rationale into it.
+- UI-safety size budgets: decision index ≤ 32 CJK characters, header ≤ 12, option label ≤ 24,
+  option description ≤ 60 when supported. These are *payload* budgets — context is **moved
+  out of the tool, never deleted**.
+- New enforcement subsection **§ 27.4 "Interactive tool payload / UI safety"** (§ 27.5–27.15
+  renumbered accordingly), extended question-quality checklist, stable semantic `id` per
+  decision, and a North-star addition: *the host UI is a delivery constraint, not the product*.
+- No duplication: the message carries meaning, the tool carries selection.
+
+### Note — a planned bullet does not exist in the artifact
+
+The release brief for 2.3.0 also mentioned *"the recommended option no longer has to be
+listed first"*. **No such rule exists anywhere in the shipped 2.3.0 `SKILL.md`** (verified
+by search). Per project policy — actual content wins, never invent history — it is *not*
+recorded as a change. If intended, it must be written into the Skill first.
+
+### Changed — repository structure (this repository)
+
+- Monolithic `SKILL.md` split into an entry point + `references/` (7 files):
+  - **kept in `SKILL.md`**: § 0 mission / north-star, § 1 temporal invariants, § 2 request
+    compiler, § 17 worked example, § 18–20 quality / final definition / lineage, § 27
+    operational enforcement protocol (L0–L3, audits, ordering, shared `render(t)`, replan,
+    severity, completion gate), § 28 audit invariants, § 29 mission check — plus a compact
+    restatement of every moved rule (*Core rules carried by references*) and a reference map;
+  - **moved verbatim**: § 3–§ 16 and § 21–§ 26 → `references/architecture.md`,
+    `workflow.md`, `visual-system.md`, `music-visual-mapping.md`, `reference-analysis.md`,
+    `decision-protocol.md`, `validation.md` — original section numbers preserved;
+  - exactly two pointer adaptations (the § 2.1 image-inspection bullets move to
+    `reference-analysis.md` while their core rule stays in `SKILL.md`; the § 27.5 reference
+    to "Section 23" now links `references/workflow.md`);
+  - fidelity verified by line-multiset comparison against the shipped artifact:
+    **0 lines lost, 0 lines duplicated, all cross-links resolve**.
+- Added `README.md` (English), `README.zh-CN.md`, `examples/`
+  (minimal / terminal-tui / lyric-driven), and `docs/readme_ai.md` (original document
+  preserved instead of overwritten).
+
+### Status
+
+- ⚠️ **Not yet field-tested.** 2.3.0 fixes the 2.2.0 known issue but has not been verified
+  in real runs. Until it is, **2.2.0 remains the field-tested baseline**.
+
+---
+
 ## [2.2.0] — 2026-10-02
 
 Verified against the shipped artifact `realtime-music-mv-universal-skill-v2.2.0.zip`
@@ -95,4 +153,5 @@ Two descriptions of 2.2 exist in the project record: the original project docume
 
 ---
 
+[2.3.0]: https://github.com/13055751/realtime-music-mv-skill/releases/tag/v2.3.0
 [2.2.0]: https://github.com/13055751/realtime-music-mv-skill/releases/tag/v2.2.0

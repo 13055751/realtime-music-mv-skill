@@ -2,7 +2,7 @@
 
 > A general-purpose **Skill for AI coding agents** that designs, implements, renders, inspects and iterates realtime music videos — driven by audio, lyrics, reference images and user intent.
 
-**Current version:** `2.2.0` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
+**Current version:** `2.3.0` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
 
 ---
 
@@ -124,7 +124,9 @@ Any time `t` decides its frame on its own. Preview, playback and offline export 
 3. **Answer only what matters.** The agent compiles the request itself and asks only at real decision boundaries (dominant visual direction, layout topology, lyric readability vs density, asset strategy…). Everything else uses documented defaults.
 4. **Look at the output together.** The agent must render representative timestamps and report `implemented / validated / known limitations / next refinement`.
 
-For hosts whose agents need extra discipline, `SKILL.md` also contains a ready-made prompt template (see *Prompt template for DeepSeek / open-ended coding agents*).
+For hosts whose agents need extra discipline, the Skill also contains a ready-made prompt
+template — see *Prompt template for DeepSeek / open-ended coding agents* in
+[`references/workflow.md`](references/workflow.md).
 
 ### Why audio-first
 
@@ -149,6 +151,14 @@ realtime-music-mv-skill/
 ├── README.md            ← this file (for humans)
 ├── README.zh-CN.md      ← Chinese version
 ├── SKILL.md             ← the Skill: entry point executed by agents
+├── references/          ← detailed manuals, loaded on demand
+│   ├── architecture.md          Scene/Plate/Compositor, world state, runtime, budgets
+│   ├── workflow.md              build steps, behavior contract, prompt template, fallbacks
+│   ├── visual-system.md         style adapters, terminal/TUI rules, transitions, end-state
+│   ├── music-visual-mapping.md  beat/onset/energy/MIDI coupling, lyrics as events
+│   ├── reference-analysis.md    reference inspection, fidelity check, asset provenance
+│   ├── decision-protocol.md     interactive clarification, locked decisions, question quality
+│   └── validation.md            timeline/coverage/determinism/text checks, critique loop
 ├── LICENSE              ← MIT
 ├── CHANGELOG.md         ← version evolution + known issues
 ├── examples/
@@ -159,6 +169,12 @@ realtime-music-mv-skill/
     └── readme_ai.md     ← original project document (Chinese)
 ```
 
+`SKILL.md` stays self-sufficient: it keeps the mission, temporal invariants, request
+compiler, worked example, quality hierarchy, lineage, enforcement protocol (L0–L3, audits,
+severity, completion gate) and audit checklist, and quotes the core rules of every moved
+section. Numbering gaps in `SKILL.md` are intentional — each gap points to the reference
+file that now carries that section, with original section numbers preserved.
+
 ## Version and evolution
 
 | Version | What changed |
@@ -166,7 +182,8 @@ realtime-music-mv-skill/
 | `1.x` | Real-time MV methodology distilled from practice: audio → time → visual state → render |
 | `2.0.0` | Universal Skill-ification: style adapters, scene/plate system, lyrics-as-events, validation, prompt compilation |
 | `2.1.0` | Agent workflow, decision boundary, input/existing-project audit, determinism rules |
-| `2.2.0` | Mission Lock; hardening of determinism, audits, replan trigger and completion gate — **current** |
+| `2.2.0` | Mission Lock; hardening of determinism, audits, replan trigger and completion gate — the field-tested baseline |
+| `2.3.0` | UI-safe interactive question payloads (message/tool separation); repository split into `SKILL.md` + `references/` — **current, not yet field-tested** |
 
 Full history, sources and known issues: [CHANGELOG.md](CHANGELOG.md).
 
@@ -178,7 +195,14 @@ No source code was copied. This project abstracts those ideas into a reusable ag
 
 ## Known issues
 
-See [CHANGELOG.md](CHANGELOG.md) — known issues are declared there per release instead of being hidden.
+Declared per release in [CHANGELOG.md](CHANGELOG.md) instead of being hidden:
+
+- **v2.2.0** — interactive question tool payloads that carry the whole
+  `[DECISION] / [WHY] / [OPTIONS] / [DEFAULT]` block can prevent host UIs from rendering
+  the options. **Fixed in v2.3.0** (context moved to the normal message; the tool payload
+  is reduced to a short decision index). Otherwise v2.2.0 is the field-tested baseline.
+- **v2.3.0** — contains that fix but **has not been field-tested yet**; real failures are
+  welcome so they can be folded into the next patch.
 
 ## License
 
