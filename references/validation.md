@@ -1,6 +1,7 @@
 > Extracted **verbatim** from `SKILL.md` (v2.3.0). Original section numbers are
 > preserved for traceability. Numeric cross-references such as "Section 27.2"
 > point to sections that remain in `SKILL.md`.
+> Sections added after the split are marked **Added in v2.4.0** (field evidence cited inline).
 
 Related rules kept in `SKILL.md`: § 27.5 input audit · § 27.10 defect
 severity · § 27.11 completion gate · § 28 audit invariants.
@@ -41,6 +42,22 @@ Verify:
 - unreachable scenes are warnings
 - runtime plate exceptions are surfaced
 - events sharing timestamps execute in deterministic order
+
+**Added in v2.4.0 — coverage must prove frames were drawn, not that plates were registered:**
+
+- count real draw primitives (`moveTo` / `lineTo` / `fillText` / `arc` / …) per plate at
+  several progress points including `p = 0` — a registration-only coverage check once
+  reported 100% while every plate was throwing and nothing was drawn;
+- the scene ↔ lyric mapping table carries an **anchor word**: each row is
+  `[index, sceneId, a word that must appear in that lyric line]` — alignment by position
+  alone silently mismapped a whole act with the total still "correct"; an anchor makes
+  the **build** fail instead of the premiere;
+- **three-layer sync audit as a gate:** walk every cue through
+  `keyword → scene → shot`, export the gap list, and gate the final full-film render on
+  `REMAINING GAPS: 0`; after repairs, re-audit to zero **before** re-rendering;
+- when gaps exist: audit automatically first, then bring **one short question carrying
+  the gap list** to the user — a checklist beats blind review of the whole film
+  (field evidence: first audit pass found 13 gaps, 7 of them the user had not noticed).
 
 ## 13.3 Rendering
 
@@ -102,6 +119,24 @@ compare final t1 with fresh t1
 ```
 
 They should match.
+
+**Added in v2.4.0 — evidence beyond the double render:**
+
+- **byte-level side evidence for visual acceptance:** compare the delivered artifact
+  against an **independent single-frame render** via sha256 — screenshot/harness
+  pipelines have returned stale or misaligned images; only matching bytes disprove the
+  misjudgment (field evidence: 8/8 byte matches before clearing a false defect);
+- **in-frame self-identifying timestamp:** embed `t / cue / sec` inside the picture
+  content, so a frame proves which moment it claims to be;
+- **no still frames:** walk the whole track at a fine step (≈0.15–0.2 s). Every sample
+  must draw above a minimum primitive floor **and** differ from the previous sample's
+  call-stream digest — a repeated frame is a gap; a run of gaps is reported with its
+  time range, named rather than felt (field evidence: 1413 samples, 0 repeats required);
+- **verify the verifier:** when a tool judges the film, first prove the tool is correct.
+  Field history is unambiguous — broken rasterizers/checkers produced symptoms
+  indistinguishable from broken artwork (white-on-white, colors read as channels,
+  float colors silently rejected, every gradient flattened). Symptom in the tool ≠
+  defect in the film.
 
 ## 13.5 Text layout test
 

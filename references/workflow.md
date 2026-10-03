@@ -1,6 +1,7 @@
 > Extracted **verbatim** from `SKILL.md` (v2.3.0). Original section numbers are
 > preserved for traceability. Numeric cross-references such as "Section 27.2"
 > point to sections that remain in `SKILL.md`.
+> Sections added after the split are marked **Added in v2.4.0** (field evidence cited inline).
 
 # 14. Build workflow for open creative tasks
 
@@ -48,6 +49,12 @@ Determine:
 ### Step 6 — Build the visual arc
 
 Describe the film in semantic states, not individual frames.
+
+**Added in v2.4.0:** the storyboard is not a mental step — a shot script must be written
+to disk (timecode / stage content / camera / transition) and later correspond **row for
+row** with the in-code shot table. "Information complete" is not "looks good"; a film
+without a shot script is a pile of dashboards. See *Shot script as a hard deliverable*
+at the end of this file.
 
 ### Step 7 — Define panel/layout topology
 
@@ -215,3 +222,48 @@ audio clock
 ```
 
 A missing optional analysis source must not invalidate the entire visual system.
+
+---
+
+# Shot script as a hard deliverable
+
+**Added in v2.4.0 (field evidence: v1 was rejected wholesale with "你这镜头脚本都没有";
+v2 added the script and passed).**
+
+Before implementing scenes, write a shot script to disk:
+
+```text
+| # | timecode | shot name | stage content | camera/motion | transition |
+```
+
+Rules:
+
+- every row maps **one-to-one** to an entry of the in-code shot table (same ids, same
+  timecodes) — the correspondence is checkable, not implied;
+- each row names the lyric lines it covers, its camera behavior, and its transition
+  class from § 9;
+- the emotional arc must be readable from the script alone (e.g. calm → breakdown →
+  reboot → warm → quiet → close);
+- when code and script disagree, one of them is wrong — fix the pair before rendering;
+- the shot script is also the unit that passes the S-C approval gate in staged delivery.
+
+# Environment traps (toolchain appendix)
+
+**Added in v2.4.0 — each item cost a real debugging session.**
+
+1. **ffmpeg `drawtext` mangles CJK** (garbled + truncated; `textfile` does not fix it) →
+   compose text in a browser canvas (headless screenshot) and let the system font engine
+   do the glyphs.
+2. **`about:blank` pages cannot load `file://` images** (EncodingError) → `page.goto` a
+   same-origin local page first, then load assets.
+3. **Cross-module data-shape mismatches fail silently** (array read as object returns
+   `undefined`, switches fall back to defaults with no error) → assert the shape
+   explicitly; when a lookup misses, **fail loud**.
+4. **Math-based effects need a visible acceptance artifact** (a wrong slope just means
+   "one fewer line" — nobody reports it) → draw the slope label / point markers so the
+   value is checkable on screen.
+5. **Heavy render output (thousands of PNGs) never enters git** — determinism means it
+   can be rebuilt; same for copyrighted audio and finished video (see § 25).
+6. **Batch text replacement is not editing** — in some shells `-replace | Set-Content`
+   re-encodes the file and double-encodes every non-ASCII character. Prefer tooling that
+   parses before writing: replace → parse → only then save.

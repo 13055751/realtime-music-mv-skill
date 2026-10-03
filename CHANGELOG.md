@@ -9,6 +9,69 @@ the entry is explicitly marked as *reconstructed* from project documentation
 
 ---
 
+## [2.4.0] — 2026-10-04
+
+**Evidence sources:** real-run feedback (*"the model just builds, never asks"*), the
+`world.execute(me)` production record ([`Galen563/world.execute-me`](https://github.com/Galen563/world.execute-me))
+and the TUI MV build log distilled into `skill-patch-reference.md` (6 delivery rounds,
+v1 rejected for missing a shot script, word-level sync acceptance, 13-gap audit → 0).
+
+### Added — staged delivery workflow (SKILL.md core, mandatory for open-ended requests)
+
+- **S-A Lyric analysis** — the whole lyric file is analyzed end to end (meaning, roles,
+  repetition groups, opposing pairs, structure) into a readable document **before any
+  visual design**. Analysis never waits for approval; design does.
+- **S-B Design in batches** — performance design covers **one batch of ~10 consecutive
+  lyric lines** (agent states its exact size, roughly 6–14 by density). Never the whole
+  song at once.
+- **S-C User approval gate per batch** — the batch plan is presented *before any stage
+  artifact is produced*; approval locks decisions, rejection re-proposes, no-response
+  falls back to § 21.10 (default + provisional + reversible), and an explicit
+  "just proceed" is itself recorded as a locked scope decision while delivery stays
+  batch-wise.
+- **S-D Per-batch production** — artifacts + sync-audit results per batch, closed with
+  `designed → approved → produced → audit gaps → open questions`.
+- Ordering rules and an explicit mapping onto the S0–S9 machine (§ 27.1: S1–S3 once per
+  song, S4–S8 per approved batch, S9 once).
+- `§ 1.1` hardened: `audio.currentTime` is **read-only** in the renderer; `syncOffset`
+  applies to the **clock**, not to a displayed number.
+
+### Added — field-distilled rules in `references/` (each marked *Added in v2.4.0*)
+
+- `music-visual-mapping.md` — **word-level timeline** (syllable-ratio split → onset
+  snapping inside ≤600 ms, monotonic; one shared timeline for karaoke lighting and stage
+  switches: *the lamp lights only when the word is sung*); **opposing concepts take
+  distinct forms** (renaming a shared graphic is not staging); **LRC time and the
+  musical grid stay separate sources**.
+- `architecture.md` — **lyric display lifetime** `min(gap, 0.8 + chars×0.09)` s, sing →
+  clear (stale lyrics = TIMING defect); **held cues resolve at lookup** (validator rule:
+  *every cue must RESOLVE TO a plate*); repeated groups read as **one entity** via a
+  parameterized factory + shared constants.
+- `workflow.md` — **shot script as a hard deliverable** (disk document ↔ in-code shot
+  table, row for row) and an **environment traps appendix** (CJK drawtext, same-origin
+  loading, fail-loud shape checks, visible acceptance artifacts for math effects, heavy
+  renders out of git, parse-before-write batch edits).
+- `validation.md` — coverage proves frames were **drawn**, not that plates **registered**;
+  anchor-word mapping tables fail the *build* instead of the premiere; **three-layer sync
+  audit gate** `keyword → scene → shot` with `REMAINING GAPS: 0`, then ask the user once
+  *with the gap list*; **byte-level sha evidence** for visual acceptance, **in-frame
+  timestamps**, a **no-still-frames sweep**, and **verify the verifier** before blaming
+  the film.
+- `visual-system.md` — **layer-isolated takeover** (performance area only; lyrics and
+  transport stay readable); **everything that turns on must have an exit**; **text
+  plates do not bleed** past their line; a motif's second occurrence **reuses the
+  established language**.
+- `reference-analysis.md` — **repository hygiene**: copyrighted audio, finished video,
+  heavy renders and ops documents stay out of git; decide *before* the first push.
+
+### Status
+
+- ⚠️ Rules are distilled from real production evidence, but this Skill revision itself
+  has **not yet been run end-to-end** in a fresh session; 2.2.0 remains the
+  field-tested baseline for the pre-split skill.
+
+---
+
 ## [2.3.0] — 2026-10-03
 
 Verified against the shipped artifact `realtime-music-mv-universal-skill-v2.3.0.zip`
@@ -153,5 +216,6 @@ Two descriptions of 2.2 exist in the project record: the original project docume
 
 ---
 
+[2.4.0]: https://github.com/13055751/realtime-music-mv-skill/releases/tag/v2.4.0
 [2.3.0]: https://github.com/13055751/realtime-music-mv-skill/releases/tag/v2.3.0
 [2.2.0]: https://github.com/13055751/realtime-music-mv-skill/releases/tag/v2.2.0

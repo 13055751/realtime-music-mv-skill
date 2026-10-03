@@ -1,6 +1,7 @@
 > Extracted **verbatim** from `SKILL.md` (v2.3.0). Original section numbers are
 > preserved for traceability. Numeric cross-references such as "Section 27.2"
 > point to sections that remain in `SKILL.md`.
+> Sections added after the split are marked **Added in v2.4.0** (field evidence cited inline).
 
 Multi-reference conflict priority is enforced in `SKILL.md` § 27.13.
 
@@ -74,3 +75,16 @@ local filename
 Prefer user-provided, procedural, public-domain, or appropriately licensed assets.
 
 Do not silently substitute arbitrary external copyrighted assets.
+
+## Repository hygiene
+
+**Added in v2.4.0 (field evidence: an ops document removed after first push forced a
+full history rewrite).**
+
+- copyrighted audio, finished video and heavy frame renders **never enter git**
+  (gitignore them; determinism means they are rebuildable from the pipeline);
+- operational documents (upload titles, tags, schedules) live **outside** the code repo;
+- git history is permanent — decide what belongs **before** the first push; removing it
+  later means rewriting history (orphan rebuild + force push), which breaks every clone;
+- provenance tracking (§ 25) applies to what is *excluded* exactly as much as to what
+  is included.

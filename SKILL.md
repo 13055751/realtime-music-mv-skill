@@ -1,7 +1,7 @@
 ---
 name: universal-realtime-music-mv
-version: 2.3.0
-description: A general-purpose skill for designing and implementing deterministic, audio-synchronised, code-rendered music videos across terminal/TUI, minimal, cinematic, anime, abstract, generative, data-driven, retro, cyber, typographic, and hybrid visual styles. Includes a prompt-compilation protocol for open-ended coding agents so vague creative requests become concrete, testable implementation plans without prematurely locking the aesthetic, plus UI-safe interactive clarification rules for constrained agent hosts.
+version: 2.4.0
+description: A general-purpose skill for designing and implementing deterministic, audio-synchronised, code-rendered music videos across terminal/TUI, minimal, cinematic, anime, abstract, generative, data-driven, retro, cyber, typographic, and hybrid visual styles. Includes a prompt-compilation protocol for open-ended coding agents so vague creative requests become concrete, testable implementation plans without prematurely locking the aesthetic, UI-safe interactive clarification rules for constrained agent hosts, and a staged delivery workflow (whole-song lyric analysis → ~10-line performance-design batches → user approval → per-batch production) that stops agents from silently building an entire MV the user never approved.
 ---
 
 # Universal Realtime Music MV Skill
@@ -86,6 +86,8 @@ t = audio.currentTime + syncOffset
 
 `syncOffset` is a stable configuration parameter measured in seconds. It must remain unchanged during a render pass and must be applied consistently to preview, playback, offline export, and validation.
 ```
+
+`audio.currentTime` is **read-only** inside the renderer — written only by an explicit user seek. `syncOffset` is applied to the **clock**, not to a displayed number: an offset that only changes what the UI prints is decoration, not synchronization.
 
 Do not accumulate visual time independently from `requestAnimationFrame`.
 
@@ -261,6 +263,67 @@ Do not skip directly to PHASE E for a broad creative request.
 
 ---
 
+# Staged delivery: analyze first, design in batches, get approval, then build
+
+Real runs expose a specific, repeated failure mode: the agent "just builds" — no lyric
+analysis, no questions, the whole song implemented in one silent pass, and a finished MV
+the user never agreed to. Speed without approval gates is not progress; it is rework
+waiting to happen. For open-ended MV requests this workflow is mandatory.
+
+## S-A Lyric analysis (whole song, before any visual design)
+
+Analyze the entire lyric file end to end before designing anything visual:
+
+```text
+per line:   timecode / text / literal meaning / semantic role / emotional valence
+grouping:   repeated-line ids, opposing-concept pairs, keyword candidates
+structure:  sections, long instrumental gaps, held-cue candidates
+```
+
+Deliverable: a lyric-analysis document the user can actually read. No visual performance
+work starts before it exists. Analysis is reading — it never waits for approval.
+
+## S-B Performance design in batches (~10 lines per batch)
+
+Design the visual performance for **one batch of about 10 consecutive lyric lines**.
+The agent chooses and states the exact batch size (by density, roughly 6–14 lines).
+**Never design the whole song at once.**
+
+For each line in the batch: semantic job, plate/motif, word-level timing hooks,
+transition, and repetition treatment (parameterized, never copy-pasted).
+
+## S-C User approval gate (per batch)
+
+Present the batch design as a short, reviewable plan **before producing any stage
+artifact for it**. Batch-level visual-direction questions are asked here — before
+designing the batch or the next one, never after building everything.
+
+- approved → the batch's decisions lock (decision log, § 21.8);
+- rejected / revised → re-propose the batch; never silently push through;
+- inside an approved batch only L0/L1 details are decided autonomously (§ 27.2);
+- no response → § 21.10 applies: use the stated default, mark it provisional, keep the
+  implementation reversible;
+- if the user explicitly says "just proceed": record that as a locked scope decision,
+  still deliver batch by batch with the analysis and per-batch summaries attached, so
+  course correction stays possible.
+
+## S-D Stage production (per approved batch)
+
+Produce that batch's artifacts: shot-script rows, plates, renders, sync-audit results.
+Close each batch with: `designed → approved → produced → audit gaps → open questions`,
+then move to the next batch.
+
+## Ordering rules
+
+1. Analysis precedes design; design precedes code — for every batch.
+2. Never keep more than one batch designed ahead of approval.
+3. This refines the S0–S9 machine (§ 27.1): S1–S3 run once per song; S4–S8 run once
+   per approved batch; S9 runs once at the end.
+4. The gate covers design and production, not understanding: reading, parsing and
+   auditing inputs stay open at all times.
+
+---
+
 # Core rules carried by references (compact)
 
 Sections 3–16 and 21–26 of the original single-file Skill moved verbatim to
@@ -285,13 +348,17 @@ remains a complete instruction set on its own.
 - Map musical features to parameters, not entire scenes by default; use decaying envelopes instead of one-frame spikes.
 - Lyrics are events, not subtitles: `lyric meaning → operation / relation / state / measurement → visual behavior`.
 - The lyric text remains the user's authoritative source; do not invent replacements when synchronization matters.
-- Semantic time and musical time are different — § 1.3 above.
+- Word-level timing: line-level cues are not enough for "the picture moves when the word is sung" — build word timestamps (syllable-ratio split, then onset snapping inside a ≤600 ms window with a monotonic constraint; no onset ⇒ keep the ratio value). Karaoke lighting and stage keyword switches share **one** word timeline.
+- Opposing concepts in lyrics (AC/DC, AD/BC, F/M …) must take visually distinct forms — renaming a shared graphic is not staging; the switch fires on the word's own timestamp.
+- Semantic time and musical time are different — § 1.3 above; keep LRC-measured lyric time and musical-grid timing as separate sources (see § 6 and § 7 in the reference).
 
 ## Visual system and style adapters → [`references/visual-system.md`](references/visual-system.md)
 
 - The temporal engine is stable; the style adapter changes (Terminal/TUI, minimal, cinematic, typographic, generative, retro/pixel, anime, hybrid).
 - Adjectives compile into observable rules (§ 2.4 above) and freeze into a Style Contract (§ 2.3 above).
 - Terminal mode obeys the real-program illusion: measured, derived, or explicitly simulated values only.
+- Everything that turns on must have an explicit exit — states opened mid-film get a shut-off, and a plate that *is* the lyric's text never bleeds past its own line (stale lyrics are a TIMING defect; negative space is designed).
+- Full-screen takeovers are layer-isolated: they cover the performance area only — status/transport/lyric regions stay alive and readable.
 - The end state is designed before implementation: INITIAL → MID → PEAK → FINAL.
 
 ## Reference analysis → [`references/reference-analysis.md`](references/reference-analysis.md)
@@ -305,6 +372,8 @@ remains a complete instruction set on its own.
 - Build workflow: audit inputs → specify → decide → prototype → render → inspect → repair → validate (Steps 0–15; the S0–S9 state machine remains § 27.1 below).
 - Validation tests **both** kinds of determinism: *state determinism* — same inputs + same `t` ⇒ same world state / layout state / random seeds; *render determinism* — same state ⇒ visually equivalent frame (`render(t)` twice and compare).
 - "Code runs" is not completion: timeline, event coverage, representative renders, text layout and determinism are validated (procedures in `references/validation.md`), then § 27.10 severity and § 27.11 completion gate decide whether the work may be declared done.
+- Coverage must prove frames were **drawn**, not that plates were **registered**; the sync audit walks keyword → scene → shot for every cue and gates the final render on zero remaining gaps. When a tool judges the work, first confirm the tool itself is correct — a broken checker makes the film look broken.
+- Shot scripting is a hard deliverable: a down-to-disk shot script (timecode / stage content / camera / transition) must correspond row-for-row with the in-code shot table. "Information complete" is not "looks good".
 - Interactive clarification follows `references/decision-protocol.md` (§ 21): ask at decision boundaries, batch into small checkpoints, keep the question-tool payload UI-safe, lock answers in a decision log.
 
 
@@ -492,6 +561,10 @@ Rules:
 - S7 repairs the highest-severity actionable defect.
 - S8 runs automated and visual validation.
 - S9 determines whether the work is complete.
+
+The staged-delivery protocol (*Staged delivery: analyze first, design in batches, get
+approval, then build*) refines this machine: S1–S3 run once per song, S4–S8 run once
+per approved lyric batch, and S9 runs once at the end.
 
 Do not enter S4 while a blocking L3 decision remains unresolved.
 

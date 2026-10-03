@@ -2,7 +2,7 @@
 
 > A general-purpose **Skill for AI coding agents** that designs, implements, renders, inspects and iterates realtime music videos — driven by audio, lyrics, reference images and user intent.
 
-**Current version:** `2.3.0` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
+**Current version:** `2.4.0` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
 
 ---
 
@@ -89,6 +89,26 @@ prototype → render → inspect → classify → repair → render again → �
 ```
 
 No irreversible implementation begins while a blocking L3 decision is unresolved, and no completion is declared without inspecting representative renders.
+
+### Staged delivery (since 2.4.0)
+
+Real runs showed agents "just building" an entire MV in silence. The Skill now enforces a
+delivery rhythm for open-ended requests:
+
+```text
+whole-song lyric analysis   (readable document, before any design)
+        ↓
+performance design for ONE batch of ~10 lyric lines   ← agent picks the exact size
+        ↓
+USER APPROVAL GATE          (plan only — no stage artifacts yet)
+        ↓
+produce that batch          (shot-script rows, plates, renders, sync audit)
+        ↓
+next batch … → final completion gate
+```
+
+Analysis precedes design; design precedes code; nothing beyond the approved batch is
+designed ahead. The user always sees a reviewable plan before anything heavy is built.
 
 ## Core architecture
 
@@ -183,7 +203,8 @@ file that now carries that section, with original section numbers preserved.
 | `2.0.0` | Universal Skill-ification: style adapters, scene/plate system, lyrics-as-events, validation, prompt compilation |
 | `2.1.0` | Agent workflow, decision boundary, input/existing-project audit, determinism rules |
 | `2.2.0` | Mission Lock; hardening of determinism, audits, replan trigger and completion gate — the field-tested baseline |
-| `2.3.0` | UI-safe interactive question payloads (message/tool separation); repository split into `SKILL.md` + `references/` — **current, not yet field-tested** |
+| `2.3.0` | UI-safe interactive question payloads (message/tool separation); repository split into `SKILL.md` + `references/` |
+| `2.4.0` | Staged delivery (lyric analysis → ~10-line design batches → user approval → per-batch production) + field-distilled rules (word-level sync, sync-audit gate, shot script, exit discipline) — **current, not yet field-tested** |
 
 Full history, sources and known issues: [CHANGELOG.md](CHANGELOG.md).
 
@@ -203,6 +224,8 @@ Declared per release in [CHANGELOG.md](CHANGELOG.md) instead of being hidden:
   is reduced to a short decision index). Otherwise v2.2.0 is the field-tested baseline.
 - **v2.3.0** — contains that fix but **has not been field-tested yet**; real failures are
   welcome so they can be folded into the next patch.
+- **v2.4.0** — its rules are distilled from real production evidence, but the revision
+  itself has not yet been run end-to-end in a fresh session.
 
 ## License
 

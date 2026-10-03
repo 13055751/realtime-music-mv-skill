@@ -1,6 +1,7 @@
 > Extracted **verbatim** from `SKILL.md` (v2.3.0). Original section numbers are
 > preserved for traceability. Numeric cross-references such as "Section 27.2"
 > point to sections that remain in `SKILL.md`.
+> Sections added after the split are marked **Added in v2.4.0** (field evidence cited inline).
 
 # 3. Style adaptation system
 
@@ -218,6 +219,12 @@ Unless explicitly requested, do not introduce:
 
 A terminal aesthetic is primarily typography, layout, state, density, and behavior.
 
+**Added in v2.4.0 (field evidence: storm and EXIT takeovers):** takeover is
+**layer-isolated**. A process takeover / full-stage capture covers the *performance area
+only* — status bars, transport/progress and the lyric region stay alive and readable.
+The wilder the staging, the harder this floor: no takeover may eat the lyrics or the
+transport.
+
 ---
 
 # 9. Transition system
@@ -251,6 +258,20 @@ error        → corruption
 silence      → clear / decay
 chorus       → topology expansion
 ```
+
+**Added in v2.4.0 (field evidence: hearts rained through an entire outro; a lyric plate
+hung 0.6–1.0 s past its vocal):**
+
+- **Everything that turns on must have an exit.** Any state or element opened mid-film
+  gets an explicit, deterministic shut-off. A parameter that latches at the climax and
+  never closes repaints the ending into a different film.
+- **Text plates do not bleed.** A plate whose subject *is* a lyric line is cut at its
+  own line end and does not join crossfade tails — while the line is not being sung, a
+  screen showing it contradicts the song (the one mistake a film with text must never
+  make). Keep this exclusion list explicit in the shot table.
+- **A motif's second occurrence speaks the established language.** If the film already
+  built a transition/motif language for a kind of moment, the next moment of that kind
+  reuses it (shared functions, different content) instead of inventing a new graphic.
 
 ---
 
