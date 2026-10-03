@@ -1,0 +1,9 @@
+# Release archives live outside git history (their content is the tags themselves)
+*.zip
+
+# Local agent runtime data
+.dsh-meow/
+
+# OS / editor noise
+.DS_Store
+*.swp
