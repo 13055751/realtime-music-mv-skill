@@ -2,7 +2,26 @@
 
 > A general-purpose **Skill for AI coding agents** that designs, implements, renders, inspects and iterates realtime music videos — driven by audio, lyrics, reference images and user intent.
 
-**Current version:** `2.4.0` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
+**Current version:** `2.4.1` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
+
+> ⚠️ **Known major issue announcement (2026-10-04)**
+>
+> We identified a **major structural problem in this Skill: there is no "designer /
+> director" role**. Current versions over-emphasize engineering discipline
+> (synchronization, determinism, validation, audits) while **visual-design guidance is
+> seriously underweighted** — the result is an MV that is "engineering-correct but lacks
+> design sense": no shot-script method, no staging method, 7 of 8 style adapters (except
+> Terminal) are only 6-8 line keyword lists, and aesthetic quality is never defined.
+>
+> **Refactor is underway** (dev branch, plan at `REFACTOR-PLAN.md`): split into two
+> Skills — `mv-director` (design/staging: scene choreography + shot scripting + style
+> design grammar) and `mv-engineer` (implementation: deterministic, synchronized,
+> verifiable code; all engineering discipline is kept as guardrails). After the refactor,
+> engineering correctness will **not** be downgraded, and visual design quality will be
+> substantially strengthened.
+>
+> Existing v2.4.x engineering discipline (sync / determinism / validation) remains valid
+> and is unaffected by this announcement.
 
 ---
 
