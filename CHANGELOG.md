@@ -11,64 +11,52 @@ the entry is explicitly marked as *reconstructed* from project documentation
 
 ## [2.4.0] — 2026-10-04
 
-**Evidence sources:** real-run feedback (*"the model just builds, never asks"*), the
-`world.execute(me)` production record ([`Galen563/world.execute-me`](https://github.com/Galen563/world.execute-me))
-and the TUI MV build log distilled into `skill-patch-reference.md` (6 delivery rounds,
-v1 rejected for missing a shot script, word-level sync acceptance, 13-gap audit → 0).
+**证据来源：** 真实运行反馈（*"这个模型就知道猛猛干，什么都不问"*）、`world.execute(me)`
+生产实录（[`Galen563/world.execute-me`](https://github.com/Galen563/world.execute-me)）以及
+蒸馏进 `skill-patch-reference.md` 的 TUI MV 构建日志（单曲 6 轮交付、v1 因没有镜头脚本被
+整版推翻、词级同步验收、13 处缺口审计 → 0）。
 
-### Added — staged delivery workflow (SKILL.md core, mandatory for open-ended requests)
+### 新增 —— 分批审批交付流程（SKILL.md 核心，开放式请求强制执行）
 
-- **S-A Lyric analysis** — the whole lyric file is analyzed end to end (meaning, roles,
-  repetition groups, opposing pairs, structure) into a readable document **before any
-  visual design**. Analysis never waits for approval; design does.
-- **S-B Design in batches** — performance design covers **one batch of ~10 consecutive
-  lyric lines** (agent states its exact size, roughly 6–14 by density). Never the whole
-  song at once.
-- **S-C User approval gate per batch** — the batch plan is presented *before any stage
-  artifact is produced*; approval locks decisions, rejection re-proposes, no-response
-  falls back to § 21.10 (default + provisional + reversible), and an explicit
-  "just proceed" is itself recorded as a locked scope decision while delivery stays
-  batch-wise.
-- **S-D Per-batch production** — artifacts + sync-audit results per batch, closed with
-  `designed → approved → produced → audit gaps → open questions`.
-- Ordering rules and an explicit mapping onto the S0–S9 machine (§ 27.1: S1–S3 once per
-  song, S4–S8 per approved batch, S9 once).
-- `§ 1.1` hardened: `audio.currentTime` is **read-only** in the renderer; `syncOffset`
-  applies to the **clock**, not to a displayed number.
+- **S-A 歌词分析** —— 在**任何视觉设计之前**，把整份歌词从头到尾分析完（字面义、语义角色、
+  重复句组、对立词对、结构），产出可读文档。分析永不等审批；设计必须等。
+- **S-B 分批设计** —— 演出设计一次只覆盖**一批约 10 句连续歌词**（Agent 声明具体批大小，
+  按密度大致 6–14 句）。绝不一次设计整首歌。
+- **S-C 每批一次用户审批门** —— 批次方案在**产出任何阶段产物之前**呈现；批准即锁定决策、
+  驳回则重新提案、无回应走 § 21.10 兜底（默认值 + provisional + 可逆），明确说"直接干"
+  本身也记为一条锁定的范围决策，但交付仍按批次进行。
+- **S-D 逐批产出** —— 每批产出产物 + 同步审计结果，以
+  `designed → approved → produced → audit gaps → open questions` 收口。
+- 排序规则，以及与 S0–S9 状态机的显式映射（§ 27.1：S1–S3 每曲一次，S4–S8 每批准批次
+  一次，S9 最后一次）。
+- `§ 1.1` 硬化：渲染器内 `audio.currentTime` **只读**；`syncOffset` 加在**时钟**上，
+  而不是显示的数字上。
 
-### Added — field-distilled rules in `references/` (each marked *Added in v2.4.0*)
+### 新增 —— 实战蒸馏规则进 `references/`（均标注 *Added in v2.4.0*）
 
-- `music-visual-mapping.md` — **word-level timeline** (syllable-ratio split → onset
-  snapping inside ≤600 ms, monotonic; one shared timeline for karaoke lighting and stage
-  switches: *the lamp lights only when the word is sung*); **opposing concepts take
-  distinct forms** (renaming a shared graphic is not staging); **LRC time and the
-  musical grid stay separate sources**.
-- `architecture.md` — **lyric display lifetime** `min(gap, 0.8 + chars×0.09)` s, sing →
-  clear (stale lyrics = TIMING defect); **held cues resolve at lookup** (validator rule:
-  *every cue must RESOLVE TO a plate*); repeated groups read as **one entity** via a
-  parameterized factory + shared constants.
-- `workflow.md` — **shot script as a hard deliverable** (disk document ↔ in-code shot
-  table, row for row) and an **environment traps appendix** (CJK drawtext, same-origin
-  loading, fail-loud shape checks, visible acceptance artifacts for math effects, heavy
-  renders out of git, parse-before-write batch edits).
-- `validation.md` — coverage proves frames were **drawn**, not that plates **registered**;
-  anchor-word mapping tables fail the *build* instead of the premiere; **three-layer sync
-  audit gate** `keyword → scene → shot` with `REMAINING GAPS: 0`, then ask the user once
-  *with the gap list*; **byte-level sha evidence** for visual acceptance, **in-frame
-  timestamps**, a **no-still-frames sweep**, and **verify the verifier** before blaming
-  the film.
-- `visual-system.md` — **layer-isolated takeover** (performance area only; lyrics and
-  transport stay readable); **everything that turns on must have an exit**; **text
-  plates do not bleed** past their line; a motif's second occurrence **reuses the
-  established language**.
-- `reference-analysis.md` — **repository hygiene**: copyrighted audio, finished video,
-  heavy renders and ops documents stay out of git; decide *before* the first push.
+- `music-visual-mapping.md` —— **词级时间轴**（音节数比例切分 → ≤600ms 窗口内吸附 onset、
+  单调约束；卡拉OK点亮与舞台切换共用一条时间轴：*词唱到才亮灯*）；**对立概念必须各自
+  成形**（给同一张图换标签不叫演出）；**歌词时间与音乐网格保持两套来源**。
+- `architecture.md` —— **歌词显示寿命** `min(间隔, 0.8 + 字数×0.09)` 秒、唱完即清
+  （残留歌词 = TIMING 缺陷）；**held cue 在查找时解析**（验证规则：*每条 cue 都必须
+  解析到一块画板*）；重复句组经参数化工厂 + 共享常量读作**同一个实体**。
+- `workflow.md` —— **镜头脚本是硬交付物**（落盘文档 ↔ 代码镜头表逐行对应）+ **环境陷阱
+  附录**（中文 drawtext、同源加载、形状检查 fail loud、数学效果的可见验收物、重渲染不进
+  git、先解析再写入的批量编辑）。
+- `validation.md` —— 覆盖率必须证明"**画出来了**"而非"注册了"；锚点词映射表让**构建**
+  失败而不是首映失败；**三层同步审计门禁** `关键词 → 场景 → 镜头` 以 `REMAINING GAPS: 0`
+  收口，有缺口时**带着清单**向用户提一次短问题；视觉验收的**字节级 sha 旁证**、**帧内
+  时间戳**、**无静止帧扫描**，以及**先验证验证器**再怪作品。
+- `visual-system.md` —— **分层隔离的接管**（只盖演出区，歌词与传输条保持可读）；**凡是
+  打开的都必须有退场**；**歌词画板绝不拖过自己的句尾**；母题第二次出现**复用已建立的
+  语言**。
+- `reference-analysis.md` —— **仓库卫生**：版权音频、成片、重渲染与运营文档一律不进 git；
+  首推**之前**就想清楚。
 
-### Status
+### 状态
 
-- ⚠️ Rules are distilled from real production evidence, but this Skill revision itself
-  has **not yet been run end-to-end** in a fresh session; 2.2.0 remains the
-  field-tested baseline for the pre-split skill.
+- ⚠️ 规则蒸馏自真实生产证据，但**本次修订本身尚未在全新会话里端到端跑过**；2.2.0 仍是
+  拆分前 skill 的实测基线。
 
 ---
 
