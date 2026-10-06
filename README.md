@@ -1,234 +1,85 @@
-# Universal Realtime Music MV Skill
+# Video Scheduler — 视频调度器 Skill
 
-> A general-purpose **Skill for AI coding agents** that designs, implements, renders, inspects and iterates realtime music videos — driven by audio, lyrics, reference images and user intent.
+> ⚠️ **发布声明**：本版 Skill 未经过任何验证；最佳运行环境是 **DSH**；想测试请自行估算价格。
 
-**Current version:** `2.4.0` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
+一个把"用户的一句话"变成完整视频的**调度器型 Skill**：主 Agent 既是解压器又是调度器，
+先把用户消息解压成结构化资源，再调度团队成员创作，最后审计、拼接、出片。
+
+不限定"音乐 MV"——任何时间驱动视频（MV / 产品片 / 文字片 / 数据可视化 / 解说 / 动态图形）
+都能走同一套调度引擎。
 
 ---
 
-## The problem this solves
-
-Ask a coding agent to *"make an MV for this song"* and you will typically get one of these:
-
-- code starts before the visual goal is understood;
-- lyrics become subtitle cards, one random effect per line;
-- music, lyrics and picture have no real causal relationship;
-- reference images are treated as paste-in assets instead of a visual grammar;
-- animation depends on `frameCount`, `deltaTime` or uncontrolled randomness, so seeking and export break;
-- the code "runs", but nobody ever looked at a rendered frame;
-- on creative forks the agent either decides unilaterally or interrogates the user forever;
-- architecture keeps growing while the MV drifts further from what was asked.
-
-This Skill exists to turn that process into a controlled pipeline:
+## 为什么是调度器
 
 ```text
-music + lyrics + references + user intent
-        → Creative Specification
-        → Style Contract
-        → music / lyric analysis
-        → visual world model
-        → Scene / Plate system
-        → deterministic render(t)
-        → render & inspect
-        → repair / refine
-        → MV
+旧模式：整堆规则塞给模型 → 模型自由发挥 → 容易跳过流程、画面"像播放器"
+调度器：主 agent 指挥（解压→调度→审计→拼接）→ 流程强制、成员隔离、可审计
 ```
 
-## The one rule
+调度器把"模型自觉遵守规则"变成"引擎强制推进流程"——治的是生成型模型的两种老毛病：
+① 不充分理解就开工（没解压就渲染）② 自由发挥时跳过所有纪律。
+
+---
+
+## 三阶段工作流
+
+### 第一阶段：解压（先于一切调度）
 
 ```text
-Skill is the leash, not the goal.
-The MV is the goal.
-Code is only a tool.
+1. 意图识别：判断资源类型（MV/文案动画/小要求），按类型选管线；
+2. 依赖补足：用户资源不足 → 从知识库/网络补；
+3. 正式解压（五小步，索引表驱动）：
+   (1) 索引表A（资源清单）：登记素材 + 音频提取信息（BPM/onset/频谱/歌词时间轴）；
+   (2) 总体风格：候选 20-50 → 筛 5-20 → Jev 三维打分 → 随机定 1；
+   (3) 局部风格：结构表B定位换风格部分 → 定 1 个最终风格；
+   (4) 动画细节：文字也是基础元素，要动起来 → 精细排班；
+   (5) 运镜设计：由动画推，定元素进出场顺序，可反向调整（上限 3 轮）。
 ```
 
-Every abstraction, validator, effect or subsystem in this Skill must answer one question: *"Which part of the MV does this concretely improve?"* If a simpler implementation produces the same audiovisual result, the simpler implementation wins.
-
-## Why a Skill instead of a prompt
-
-| Ordinary prompt | This Skill |
-| --- | --- |
-| one-shot text, re-typed every session | a durable methodology the agent loads every run |
-| describes a wish ("make it cool") | compiles the wish into a testable Specification and Style Contract |
-| no rule about when to ask questions | explicit decision levels (L0–L3): decide alone, default, or ask |
-| "done" = compiles | "done" = a Completion Gate: validated, inspected, synchronized output |
-| drifts with every iteration | Mission Lock + anti-drift checks keep the work pointed at the MV |
-
-## Core design ideas
-
-1. **Mission Lock** — the Skill serves the MV, not the agent's architecture. Technical purity never outranks the user's intent.
-2. **Audio-first** — `t = audio.currentTime + syncOffset` is the single clock. Never `t += deltaTime`, never `frameCount++`.
-3. **Deterministic rendering** — same inputs + same `t` ⇒ same state ⇒ visually equivalent frame. Randomness comes from stable seeds like `seed(sceneId, eventId, elementId)`.
-4. **Lyrics are events, not subtitles** — `lyric meaning → operation / relation / state / measurement → visual behavior`.
-5. **Music-to-visual mapping** — beat, onset, energy, MIDI and silence map to *parameters* (density, deformation, pulse, decay), not to one-off decorative flashes.
-6. **Plate-based visual system** — reusable Scene / Plate / Compositor layers, each close to a pure function `render(ctx, t, world, cue, progress)`; repetition is parameterized, never copy-pasted.
-7. **Style-agnostic core, style-specific adapters** — the same temporal engine drives TUI, minimal, cinematic, typographic, generative, retro, anime or hybrid looks.
-8. **Open-ended request compiler** — a vague sentence is first compiled into a Specification, Style Contract, layout topology, mappings and a validation plan.
-9. **Decision boundary (L0–L3)** — trivial details are decided by the agent; architectural forks are asked before implementation, batched at checkpoints, then locked.
-10. **Validation as a gate** — input audit, timeline/coverage/determinism/text-layout checks, defect severity (BLOCKER→LOW) and a Completion Gate stand between "it runs" and "it is done".
-
-## Workflow
-
-The agent moves through an explicit state machine; rendering is a loop, not a ceremony:
+### 第二阶段：调度（一切以调度器为中心）
 
 ```text
-S0 INSPECT      audit inputs + existing project
-S1 SPECIFY      Creative Specification + Style Contract
-S2 DECISION     detect unresolved decision boundaries (L0–L3)
-S3 LOCK         record user answers / defaults as provisional or locked
-S4 PROTOTYPE    implement one representative slice
-S5 RENDER       render real frames
-S6 CRITIQUE     classify defects by severity
-S7 REPAIR       fix the highest-impact defect
-S8 VALIDATE     automated + visual validation
-S9 GATE         Completion Gate, then stop
+1. 分成员：3-5 槽位池（调度器自身不算），有成员完成（文件入队+抽帧到位）→ 释放 → 派新；
+2. 成员隔离创作：只读调度器批准的素材 + 创作纪律摘要，不越权读 skill/其他素材；
+   可中途与主 agent 沟通、可批判；成品按编号入目录，附 2-3 张抽帧；
+3. 文件审计（调度器审，清单固定）：编号/时间戳/确定性/风格/运镜/文字/无越权/抽帧；
+4. 拼接：路2（微调成员统一运镜，先做）→ 路1（交错分片，后实验）。
 ```
+
+### 第三阶段：成品
+
+全部片段审计通过 + 拼接完成 → 产出成品（MP4）→ 交付：资源清单 + 成员产出目录 + 审计记录 + 已知问题。
+
+---
+
+## 快速开始（DSH）
 
 ```text
-prototype → render → inspect → classify → repair → render again → …
+1. 新开会话，加载 video-scheduler（已装 ~/.dsh/skills 与 ~/.agents/skills）；
+2. 说："用 video-scheduler 做一支视频：<素材>"；
+3. 调度器自动：解压 → 三个概念呈现 → （可选）你批准 → 分成员创作 → 审计 → 出片。
 ```
 
-No irreversible implementation begins while a blocking L3 decision is unresolved, and no completion is declared without inspecting representative renders.
+想全程自主、完工才看？说："全程自己来，完工才交付"——调度器会走全自动完工模式
+（零打扰，完工一次性交付：脚本 + 成品 + 自审报告）。
 
-### Staged delivery (since 2.4.0)
+---
 
-Real runs showed agents "just building" an entire MV in silence. The Skill now enforces a
-delivery rhythm for open-ended requests:
+## 文件结构
 
 ```text
-whole-song lyric analysis   (readable document, before any design)
-        ↓
-performance design for ONE batch of ~10 lyric lines   ← agent picks the exact size
-        ↓
-USER APPROVAL GATE          (plan only — no stage artifacts yet)
-        ↓
-produce that batch          (shot-script rows, plates, renders, sync audit)
-        ↓
-next batch … → final completion gate
+scheduler/
+├── SKILL.md                      调度器主指令（解压→调度→拼接）
+├── references/
+│   ├── worker-prompt-template.md 成员任务模板（隔离创作契约）
+│   └── camera-animation-craft.md  运镜与动画工艺（治"不灵动"）
+└── scripts/
+    └── jev-free.mjs              Jev 免密打分组件（风格 judge）
 ```
 
-Analysis precedes design; design precedes code; nothing beyond the approved batch is
-designed ahead. The user always sees a reviewable plan before anything heavy is built.
+---
 
-## Core architecture
+## 许可证
 
-```text
-                         AUDIO TIME
-                             │
-       ┌─────────────────────┼──────────────────────┐
-       │                     │                      │
-   lyric cues         beat/MIDI/onset/spectrum   structure/energy
-       │                     │                      │
-       └─────────────────────┼──────────────────────┘
-                             ▼
-                       WORLD STATE
-        (style system, persistent substrate, scene plates, transitions)
-                             ▼
-                         COMPOSITOR
-                             ▼
-                            FRAME
-```
-
-Any time `t` decides its frame on its own. Preview, playback and offline export share **one** `render(t)` pipeline — export computes `t = frameIndex / fps + syncOffset` instead of accumulating deltas — which is what makes seeking, screenshots, reproducible debugging and render/export consistency possible at once.
-
-## How to use
-
-1. **Install the Skill** into your agent host's skill directory so `SKILL.md` is loaded (for DSH: `~/.dsh/skills/<skill-name>/SKILL.md`; other hosts: their equivalent skill/plugin folder).
-2. **Give it a real request** with whatever inputs you have:
-
-   ```text
-   Make a terminal-style MV from this song.
-   audio: song.mp3   lyrics: song.lrc   reference: screenshot.png
-   ```
-
-3. **Answer only what matters.** The agent compiles the request itself and asks only at real decision boundaries (dominant visual direction, layout topology, lyric readability vs density, asset strategy…). Everything else uses documented defaults.
-4. **Look at the output together.** The agent must render representative timestamps and report `implemented / validated / known limitations / next refinement`.
-
-For hosts whose agents need extra discipline, the Skill also contains a ready-made prompt
-template — see *Prompt template for DeepSeek / open-ended coding agents* in
-[`references/workflow.md`](references/workflow.md).
-
-### Why audio-first
-
-If the visual clock runs on its own, every transport operation — pause, seek, replay, screenshot, offline export, debug-by-timestamp — becomes a separate code path that can disagree with the others. Anchoring time to the audio element collapses all of them into one function of `t`, and `syncOffset` stays a single stable configuration applied consistently to preview, playback, export and validation.
-
-### Why deterministic rendering
-
-A music video is watched in every order: scrubbed, re-watched, exported frame by frame, compared against the reference. If a frame depends on accumulated state, wall-clock time or `Math.random()` during drawing, the same timestamp produces different pictures — seeking jumps, exports drift, and defects cannot be reproduced. Determinism is not aesthetic purity; it is what makes inspection and repair possible at all. The Skill separates **state determinism** (same inputs + `t` ⇒ same state) from **render determinism** (same state ⇒ visually equivalent frame) and validates both.
-
-### Why lyrics are not subtitles
-
-A subtitle track never touches the visual system. Treating lyrics as *semantic events* lets the same cue change scene state, data flow, typography, density or camera behavior — so the words participate in the picture instead of floating on top of it. The lyric text itself stays authoritative: never invent replacements when synchronization matters.
-
-### Why decision checkpoints
-
-Two failure modes kill open-ended creative work: the agent deciding taste questions alone, or asking a 17-question questionnaire. Decision levels fix both — L0/L1 are decided or defaulted by the agent, L2 is recorded, and only L3 (dominant style, layout topology, temporal architecture, asset strategy, renderer architecture) must be asked *before* implementation, batched into small checkpoints, and locked afterwards so the same question is never re-asked.
-
-## Repository layout
-
-```text
-realtime-music-mv-skill/
-├── README.md            ← this file (for humans)
-├── README.zh-CN.md      ← Chinese version
-├── SKILL.md             ← the Skill: entry point executed by agents
-├── references/          ← detailed manuals, loaded on demand
-│   ├── architecture.md          Scene/Plate/Compositor, world state, runtime, budgets
-│   ├── workflow.md              build steps, behavior contract, prompt template, fallbacks
-│   ├── visual-system.md         style adapters, terminal/TUI rules, transitions, end-state
-│   ├── music-visual-mapping.md  beat/onset/energy/MIDI coupling, lyrics as events
-│   ├── reference-analysis.md    reference inspection, fidelity check, asset provenance
-│   ├── decision-protocol.md     interactive clarification, locked decisions, question quality
-│   └── validation.md            timeline/coverage/determinism/text checks, critique loop
-├── LICENSE              ← MIT
-├── CHANGELOG.md         ← version evolution + known issues
-├── examples/
-│   ├── minimal/         ← smallest complete MV workflow
-│   ├── terminal-tui/    ← terminal/TUI case (compiled spec example)
-│   └── lyric-driven/    ← lyrics driving visual events
-└── docs/
-    └── readme_ai.md     ← original project document (Chinese)
-```
-
-`SKILL.md` stays self-sufficient: it keeps the mission, temporal invariants, request
-compiler, worked example, quality hierarchy, lineage, enforcement protocol (L0–L3, audits,
-severity, completion gate) and audit checklist, and quotes the core rules of every moved
-section. Numbering gaps in `SKILL.md` are intentional — each gap points to the reference
-file that now carries that section, with original section numbers preserved.
-
-## Version and evolution
-
-| Version | What changed |
-| --- | --- |
-| `1.x` | Real-time MV methodology distilled from practice: audio → time → visual state → render |
-| `2.0.0` | Universal Skill-ification: style adapters, scene/plate system, lyrics-as-events, validation, prompt compilation |
-| `2.1.0` | Agent workflow, decision boundary, input/existing-project audit, determinism rules |
-| `2.2.0` | Mission Lock; hardening of determinism, audits, replan trigger and completion gate — the field-tested baseline |
-| `2.3.0` | UI-safe interactive question payloads (message/tool separation); repository split into `SKILL.md` + `references/` |
-| `2.4.0` | Staged delivery (lyric analysis → ~10-line design batches → user approval → per-batch production) + field-distilled rules (word-level sync, sync-audit gate, shot script, exit discipline) — **current, not yet field-tested** |
-
-Full history, sources and known issues: [CHANGELOG.md](CHANGELOG.md).
-
-## Project origin
-
-The realtime, deterministic, lyric-driven architecture is **inspired by** the documented design principles of [`Galen563/world.execute-me`](https://github.com/Galen563/world.execute-me): audio-driven, deterministic, lyric-driven, time-based, code-rendered.
-
-No source code was copied. This project abstracts those ideas into a reusable agent methodology and adds style adaptation, open-ended prompt compilation, an interactive decision protocol, validation and visual critique. **There is no official affiliation or collaboration with the original author** — attribution is a credit of inspiration, not a partnership.
-
-## Known issues
-
-Declared per release in [CHANGELOG.md](CHANGELOG.md) instead of being hidden:
-
-- **v2.2.0** — interactive question tool payloads that carry the whole
-  `[DECISION] / [WHY] / [OPTIONS] / [DEFAULT]` block can prevent host UIs from rendering
-  the options. **Fixed in v2.3.0** (context moved to the normal message; the tool payload
-  is reduced to a short decision index). Otherwise v2.2.0 is the field-tested baseline.
-- **v2.3.0** — contains that fix but **has not been field-tested yet**; real failures are
-  welcome so they can be folded into the next patch.
-- **v2.4.0** — its rules are distilled from real production evidence, but the revision
-  itself has not yet been run end-to-end in a fresh session.
-
-## License
-
-[MIT](LICENSE). Copyright © 2026 tsukikage.
-
-Attribution: design inspiration from `Galen563/world.execute-me` (see *Project origin*).
+MIT · 版权人 tsukikage
