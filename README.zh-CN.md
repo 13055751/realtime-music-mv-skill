@@ -1,5 +1,7 @@
 # Universal Realtime Music MV Skill
 
+> ⚠️ **已迁移（2026-10-07）**：本项目已迁移至 **[tsukikage-yura/video-scheduler](https://github.com/tsukikage-yura/video-scheduler)**（调度器架构）。此仓库保留存档，不再更新。
+
 > 面向 AI Coding Agent 的**通用实时音乐 MV Skill**：根据音乐、歌词、参考图与用户意图，完成实时音乐 MV 的设计、实现、渲染、检查与迭代。
 
 **当前版本：** `2.4.1` · **状态：** 实验中 / 持续演进 · **许可证：** MIT · English: [README.md](README.md)

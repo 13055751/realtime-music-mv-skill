@@ -1,5 +1,7 @@
 # Universal Realtime Music MV Skill
 
+> 🚨 **Migrated (2026-10-07):** development has moved to **[tsukikage-yura/video-scheduler](https://github.com/tsukikage-yura/video-scheduler)** (scheduler architecture). This repository is kept as an archive.
+
 > A general-purpose **Skill for AI coding agents** that designs, implements, renders, inspects and iterates realtime music videos — driven by audio, lyrics, reference images and user intent.
 
 **Current version:** `2.4.1` · **Status:** Experimental / actively evolving · **License:** MIT · 中文版：[README.zh-CN.md](README.zh-CN.md)
